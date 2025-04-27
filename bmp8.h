@@ -102,4 +102,4 @@ void bmp24_readPixelValue (t_bmp * image, int x, int y, FILE * file);
 void bmp24_readPixelData (t_bmp * image, FILE * file);
 void bmp24_writePixelValue (t_bmp * image, int x, int y, FILE * file);
 void bmp24_writePixelData (t_bmp * image, FILE * file);
-
+void bmp24_writePixel (t_bmp * image, FILE * file); // fonction à supprimer
