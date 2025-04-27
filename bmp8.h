@@ -13,6 +13,7 @@ unsigned int dataSize; /* taille des données de l'image en octets (offset 28 )*
 
 } t_bmp8;
 
-
-
-t_bmp*
+void  bmp8_saveImage( char filename, *t_bmp8 image);
+void bmp8_printInfo( t_bmp8* image );
+void bmp_brightness(t_bmp8* image, int value);
+void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize);
