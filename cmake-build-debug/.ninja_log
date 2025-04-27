@@ -1,0 +1,5 @@
+# ninja log v6
+9	344	7674839501419414	build.ninja	a4bbaeb4970cac23
+16	163	7669469911098441	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/main.c.obj	fb3a9eed021db18
+7	178	7669469911011307	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp8.c.obj	6e067d860f53afef
+178	382	7669469912717288	Image_processing_C_Mohamed_Bonkoko_Ragazzi.exe	24f1093a287d63df

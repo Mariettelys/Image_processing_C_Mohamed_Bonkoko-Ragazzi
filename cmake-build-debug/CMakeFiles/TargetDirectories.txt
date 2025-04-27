@@ -1,0 +1,3 @@
+C:/Users/marie/CLionProjects/Image_processing_C_Mohamed_Bonkoko-Ragazzi/cmake-build-debug/CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir
+C:/Users/marie/CLionProjects/Image_processing_C_Mohamed_Bonkoko-Ragazzi/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/marie/CLionProjects/Image_processing_C_Mohamed_Bonkoko-Ragazzi/cmake-build-debug/CMakeFiles/rebuild_cache.dir
