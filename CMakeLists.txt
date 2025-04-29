@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.30)
-project(Image_processing_C_Mohamed_Bonkoko_Ragazzi C)
+cmake_minimum_required(VERSION 3.16)
+project(Image_processing_C_Mohamed_Bonkoko-Ragazzi)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-include_directories(.)
+add_executable(Image_processing_C_Mohamed_Bonkoko-Ragazzi
+    main.c
+    bmp8.c
+)
 
-add_executable(Image_processing_C_Mohamed_Bonkoko_Ragazzi
-        bmp8.c
-        main.c)
