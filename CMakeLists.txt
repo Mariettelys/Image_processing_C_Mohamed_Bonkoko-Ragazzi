@@ -7,5 +7,4 @@ include_directories(.)
 
 add_executable(Image_processing_C_Mohamed_Bonkoko_Ragazzi
     bmp8.c
-    bmp8.h
     main.c)
