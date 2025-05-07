@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
 typedef struct {
@@ -25,15 +26,30 @@ void bmp8_applyFilter(t_bmp8 * img, float ** kernel, int kernelSize);
 
 // Partie 2
 
-typedef struct {
-    t_bmp_header header;
-    t_bmp_info header_info;
-    int width;
-    int height;
-    int colorDepth;
-    t_pixel **data;
-} t_bmp24;
+// Constantes pour les offsets des champs de l'en-tête BMP
+#define BITMAP_MAGIC       0x00 // offset 0
+#define BITMAP_SIZE        0x02 // offset 2
+#define BITMAP_OFFSET      0x0A // offset 10
+#define BITMAP_WIDTH       0x12 // offset 18
+#define BITMAP_HEIGHT      0x16 // offset 22
+#define BITMAP_DEPTH       0x1C // offset 28
+#define BITMAP_SIZE_RAW    0x22 // offset 34
+ // Constante pour le type de fichier BMP
+ #define BMP_TYPE          0x4D42 // 'BM' en hexadécimal
+ // Constantes pour les tailles des champs de l'en-tête BMP
+ #define HEADER_SIZE       0x0E // 14 octets
+ #define INFO_SIZE         0x28 // 40 octets
+ // Constantes pour les valeurs de profondeur de couleur
+ #define DEFAULT_DEPTH     0x18 // 24
 
+// Définition d’un pixel RGB (8 bits par canal)
+typedef struct {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} t_pixel;
+
+// En-tête BMP (14 octets)
 typedef struct {
     uint16_t type;
     uint32_t size;
@@ -41,6 +57,8 @@ typedef struct {
     uint16_t reserved2;
     uint32_t offset;
 } t_bmp_header;
+
+// En-tête d’informations de l’image (40 octets)
 typedef struct {
     uint32_t size;
     int32_t width;
@@ -55,51 +73,14 @@ typedef struct {
     uint32_t importantcolors;
 } t_bmp_info;
 
+// Image BMP 24 bits
 typedef struct {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-} t_pixel;
+    t_bmp_header header;
+    t_bmp_info header_info;
+    int width;
+    int height;
+    int colorDepth;
+    t_pixel **data;  // Matrice 2D de pixels
+} t_bmp24;
 
-// Constantes pour les offsets des champs de l'en-tête BMP
-#define BITMAP_MAGIC
-0x00 // offset 0
-#define BITMAP_SIZE
-#define BITMAP_OFFSET
-#define BITMAP_WIDTH
-#define BITMAP_HEIGHT
-#define BITMAP_DEPTH
-0x02 // offset 2
-0x0A // offset 10
-0x12 // offset 18
-0x16 // offset 22
-#define BITMAP_SIZE_RAW
- 0x22 // offset 34
- // Constante pour le type de fichier BMP
- #define BMP_TYPE
- 0x4D42 // 'BM' en hexadécimal
- // Constantes pour les tailles des champs de l'en-tête BMP
- #define HEADER_SIZE
- #define INFO_SIZE
- 0x0E // 14 octets
- 0x28 // 40 octets
- // Constantes pour les valeurs de profondeur de couleur
- #define DEFAULT_DEPTH
- 0x18 // 24
 
-t_pixel ** bmp24_allocateDataPixels (int width, int height);
-void bmp24_freeDataPixels (t_pixel ** pixels, int height);
-t_bmp24 * bmp24_allocate (int width, int height, int colorDepth);
-void bmp24_free (t_bmp * img);
-
-t_bmp24 * bmp24_loadImage (const char * filename);
-void bmp24_saveImage (t_bmp * img, const char * filename);
-
-t_bmp_header header;
-file_rawRead(BITMAP_MAGIG, &header, sizeof(t_bmp_header), 1, file);
-
-void bmp24_readPixelValue (t_bmp * image, int x, int y, FILE * file);
-void bmp24_readPixelData (t_bmp * image, FILE * file);
-void bmp24_writePixelValue (t_bmp * image, int x, int y, FILE * file);
-void bmp24_writePixelData (t_bmp * image, FILE * file);
-void bmp24_writePixel (t_bmp * image, FILE * file); // fonction à supprimer

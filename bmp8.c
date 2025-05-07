@@ -4,6 +4,7 @@
 #include <math.h>
 
 t_bmp8 * bmp8_loadImage(const char * filename){
+  printf("Tentative d'ouverture du fichier : %s\n", filename);
   // Ouvrir le fichier en mode binaire lecture ("rb")
   FILE *file = fopen(filename, "rb" );
 
