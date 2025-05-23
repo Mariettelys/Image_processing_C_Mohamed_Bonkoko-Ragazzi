@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <stdint.h>
 
 
@@ -82,5 +83,6 @@ typedef struct {
     int colorDepth;
     t_pixel **data;  // Matrice 2D de pixels
 } t_bmp24;
+
 
 

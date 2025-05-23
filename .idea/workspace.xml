@@ -29,19 +29,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="262ca039-9c64-4c58-a383-ec11f0473734" name="Changes" comment="commit partie 1 fonction">
+    <list default="true" id="262ca039-9c64-4c58-a383-ec11f0473734" name="Changes" comment="commit partie 2 : Constantes + types">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bmp8.c" beforeDir="false" afterPath="$PROJECT_DIR$/bmp8.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bmp8.h" beforeDir="false" afterPath="$PROJECT_DIR$/bmp8.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/cache-v2-de857e7b1d19ed4425ba.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/cmakeFiles-v1-d244fc25d3f631dc568c.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/index-2025-04-27T21-07-15-0728.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/index-2025-04-29T08-25-31-0402.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/CMakeConfigureLog.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/CMakeConfigureLog.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/CMakeDirectoryInformation.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Makefile.cmake" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
@@ -133,8 +124,8 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="C/C++ File.main.c" />
       <item itemvalue="CMake Application.Image_processing_C_Mohamed_Bonkoko_Ragazzi" />
+      <item itemvalue="C/C++ File.main.c" />
     </list>
     <recent_temporary>
       <list>
@@ -156,7 +147,9 @@
       <workItem from="1746519939593" duration="77000" />
       <workItem from="1746620295364" duration="2140000" />
       <workItem from="1746622502664" duration="2284000" />
-      <workItem from="1746624866869" duration="1514000" />
+      <workItem from="1746624866869" duration="2455000" />
+      <workItem from="1747117628183" duration="107000" />
+      <workItem from="1747117778139" duration="85000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -174,7 +167,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745780820391</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="commit partie 2 : Constantes + types">
+      <option name="closed" value="true" />
+      <created>1746634633602</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1746634633602</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -188,7 +189,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="commit" />
     <MESSAGE value="commit partie 1 fonction" />
-    <option name="LAST_COMMIT_MESSAGE" value="commit partie 1 fonction" />
+    <MESSAGE value="commit partie 2 : Constantes + types" />
+    <option name="LAST_COMMIT_MESSAGE" value="commit partie 2 : Constantes + types" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

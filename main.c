@@ -5,8 +5,8 @@
 int main() {
 
     // fonction 2.1 bmp8_LoadImage
+    //t_bmp8 *img = bmp8_loadImage("lena_gray.bmp");
     t_bmp8 *img = bmp8_loadImage("lena_gray.bmp");
-    t_bmp8 *img2 = bmp8_loadImage("barbara_gray.bmp");
 
     // fonction 2.3 bmp8_free
     bmp8_free(img);
