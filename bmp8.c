@@ -8,25 +8,25 @@
 void bmp8_saveImage(const char *filename, t_bmp8 *image) {
     FILE *imagedep = fopen(filename, "wb"); // Ouverture de l'image de départ en mode écriture
     if (imagedep == NULL) { // Vérifie si l'ouverture a fonctionné
-        fprintf(stderr, "Erreur d'ouverture du fichier pour écriture : %s\n", filename);
+        printf( "Erreur d'ouverture de fichier ");
         return;
     }
 
-    size_t temp; // Utiliser size_t pour le retour de fwrite
+    size_t temp; 
 
-    // Écriture de l'en-tête (54 octets)
+    // Écriture de l'en-tête 
     temp = fwrite(image->header, sizeof(unsigned char), 54, imagedep);
     if (temp != 54) {
-        fprintf(stderr, "Erreur d'écriture de l'en-tête.\n");
+        printf( "Erreur d'écriture de l'en-tête.");
         fclose(imagedep);
         return;
     }
 
-    // Écriture de la table de couleurs (1024 octets)
+    // Écriture de la table de couleurs 
     temp = fwrite(image->colorTable, sizeof(unsigned char), 1024, imagedep);
     if (temp != 1024) {
-        fprintf(stderr, "Erreur d'écriture de la table des couleurs.\n");
-        // Correction : Fermer le fichier avant de quitter
+        printf("Erreur d'écriture de la table des couleurs.");
+        
         fclose(imagedep);
         return;
     }
@@ -40,19 +40,17 @@ void bmp8_saveImage(const char *filename, t_bmp8 *image) {
     }
 
     fclose(imagedep);
-    // Pas besoin de return ici si c'est la fin de la fonction
 }
 
 void bmp8_printInfo(t_bmp8 *image) {
-    printf("Image Info:\n"); // Ajout d'un saut de ligne
-    printf("\tWidth: %u pixels\n", image->width); // %u pour unsigned int
-    printf("\tHeight: %u pixels\n", image->height); // %u pour unsigned int
-    printf("\tColor Depth: %u bits\n", image->colorDepth); // %u pour unsigned int
-    printf("\tData Size: %u bytes\n", image->dataSize); // %u pour unsigned int
+    printf("Image Info:\n"); 
+    printf("\tWidth: %u pixels\n", image->width);  
+    printf("\tHeight: %u pixels\n", image->height); 
+    printf("\tColor Depth: %u bits\n", image->colorDepth);
+    printf("\tData Size: %u bytes\n", image->dataSize); 
 }
 
 void bmp_brightness(t_bmp8 *image, int value) {
-    // Correction : La boucle doit commencer à 0 et aller jusqu'à dataSize - 1
     for (unsigned int i = 0; i < image->dataSize; i++) {
         int nvpixel = image->data[i] + value;
 
@@ -64,70 +62,51 @@ void bmp_brightness(t_bmp8 *image, int value) {
         }
 
         image->data[i] = (unsigned char)nvpixel;
-        // Correction : Supprimer le 'return;' ici
     }
 }
 
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
-    // Calcul de n (taille moitié du noyau) à partir de kernelSize
-    // kernelSize doit être impair pour un noyau centré.
+ 
     int n = kernelSize / 2;
 
     unsigned int width = img->width;
     unsigned int height = img->height;
 
-    // Allocation d'une nouvelle mémoire pour les données de l'image filtrée
+   
     unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);
     if (nvdata == NULL) {
         fprintf(stderr, "Erreur d'allocation mémoire pour nvdata dans bmp8_applyFilter.\n");
         return;
     }
-
-    // Copie initiale des données pour gérer les bords non traités par le filtre
-    // Les pixels des bords non traités par le filtre conserveront leur valeur originale.
     for (unsigned int i = 0; i < img->dataSize; i++) {
         nvdata[i] = img->data[i];
     }
 
-    // Boucles pour parcourir les pixels de l'image, en ignorant les bords.
-    // Le filtre ne peut pas être appliqué aux 'n' premiers et 'n' derniers pixels de chaque dimension.
+
     for (unsigned int y = n; y < height - n; y++) {
         for (unsigned int x = n; x < width - n; x++) {
-            float somme = 0.0f; // Utiliser float pour la somme intermédiaire
-
-            // Application du noyau (convolution)
+            float somme = 0.0f; /
             for (int yy = -n; yy <= n; yy++) {
                 for (int xx = -n; xx <= n; xx++) {
                     int voisinX = x + xx;
                     int voisinY = y + yy;
-
-                    // Accès au pixel voisin
-                    // Assurez-vous que voisinX et voisinY restent dans les limites de l'image
-                    // (Les boucles externes (x,y) garantissent cela pour les pixels non-bords)
                     unsigned char pixelVoisin = img->data[voisinY * width + voisinX];
                     float coeff = kernel[yy + n][xx + n];
 
                     somme += pixelVoisin * coeff;
                 }
             }
-
-            // Clamping des valeurs à 0-255
-            // Utilisation de fmax et fmin de <math.h> pour la clarté, ou des ifs
             somme = fmax(0.0f, fmin(255.0f, somme));
-
-            // Stockage de la nouvelle valeur du pixel dans le tableau temporaire
             nvdata[y * width + x] = (unsigned char)somme;
         }
     }
-
-    // Copie des données filtrées du tableau temporaire vers les données originales de l'image
     for (unsigned int i = 0; i < img->dataSize; i++) {
         img->data[i] = nvdata[i];
     }
 
-    // Libération de la mémoire allouée pour le tableau temporaire
+
     free(nvdata);
-    nvdata = NULL; // Bonne pratique
+    nvdata = NULL;
 }
 
 
@@ -171,11 +150,6 @@ void bmp24_freeDataPixels(t_pixel** pixels, int height) {
     free(pixels);
 }
 
-
-
-// --- Fonctions de Lecture/Écriture Directe des Pixels ---
-
-#include "my_bmp.h"
 
 void bmp24_readPixelValue (t_bmp24 * image, int x, int y, FILE * file) {
     if (!image || !image->data || !file || x < 0 || x >= image->width || y < 0 || y >= image->height) return;
