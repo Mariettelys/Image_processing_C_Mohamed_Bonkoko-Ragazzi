@@ -34,7 +34,7 @@ void bmp8_saveImage(const char *filename, t_bmp8 *image) {
     // Écriture des données des pixels
     temp = fwrite(image->data, sizeof(unsigned char), image->dataSize, imagedep);
     if (temp != image->dataSize) {
-        fprintf(stderr, "Erreur lors de l'écriture des données de l'image.\n");
+        printf("Erreur d'écriture des données de l'image");
         fclose(imagedep);
         return;
     }
