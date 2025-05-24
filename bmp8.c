@@ -1,7 +1,4 @@
 #include "bmp8.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
 t_bmp8 *bmp8_loadImage(const char *filename) {
     FILE *file = NULL;
@@ -253,3 +250,4 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
 
   free(newData);
 }
+
