@@ -1,9 +1,11 @@
 # ninja log v6
-9	344	7696901265525148	build.ninja	a4bbaeb4970cac23
-33	1064	7696868399903598	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/main.c.obj	fb3a9eed021db18
-18	1070	7696868399750706	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp8.c.obj	6e067d860f53afef
-1070	2069	7696868410277130	Image_processing_C_Mohamed_Bonkoko_Ragazzi.exe	24f1093a287d63df
 27	436	7696904935734962	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/main.c.obj	fb3a9eed021db18
+9	344	7697931268636649	build.ninja	a4bbaeb4970cac23
+499	1175	7696904940461550	Image_processing_C_Mohamed_Bonkoko_Ragazzi.exe	7aa6e1bbed426bdc
 10	470	7696904935563599	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp8.c.obj	6e067d860f53afef
 44	498	7696904935925430	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp24.c.obj	637c5b298b8f3793
-499	1175	7696904940461550	Image_processing_C_Mohamed_Bonkoko_Ragazzi.exe	7aa6e1bbed426bdc
+26	1354	7697931268636649	build.ninja	a4bbaeb4970cac23
+49	277	7697931269810237	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/main.c.obj	fb3a9eed021db18
+42	362	7697931269734763	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp8.c.obj	6e067d860f53afef
+57	377	7697931269885495	CMakeFiles/Image_processing_C_Mohamed_Bonkoko_Ragazzi.dir/bmp24.c.obj	637c5b298b8f3793
+377	1026	7697931273088311	Image_processing_C_Mohamed_Bonkoko_Ragazzi.exe	7aa6e1bbed426bdc

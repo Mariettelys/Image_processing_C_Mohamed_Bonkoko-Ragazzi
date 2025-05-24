@@ -100,162 +100,114 @@ void bmp24_free(t_bmp24 * img) {
 t_bmp24 * bmp24_loadImage (const char * filename) {
     FILE *file = NULL;
     t_bmp24 *img = NULL;
+    t_bmp_header temp_header;
+    t_bmp_info temp_info;
+    int width, height, colorDepth;
 
     file = fopen(filename, "rb");
     if (file == NULL) {
-        printf("Erreur : ouverture du fichier impossible %s\n", filename);
+        printf("Erreur: Impossible d'ouvrir le fichier %s.\n", filename);
         return NULL;
     }
 
-    // Lecture du header pour informations relatives à l'image
-    t_bmp_header temp_header;
-    t_bmp_info temp_info;
+    // Lecture informations initiales pour l'allocation (offsets directs pour la lecture)
+    file_rawRead(BITMAP_WIDTH, &width, sizeof(int32_t), 1, file);
+    file_rawRead(BITMAP_HEIGHT, &height, sizeof(int32_t), 1, file);
+    file_rawRead(BITMAP_DEPTH, &colorDepth, sizeof(uint16_t), 1, file);
 
-    file_rawRead(BITMAP_MAGIC, &temp_header, sizeof(t_bmp_header), 1, file); // Lit l'en-tête pour l'offset
-    file_rawRead(BITMAP_MAGIC + HEADER_SIZE, &temp_info, sizeof(t_bmp_info), 1, file); // Lit l'info header
-
-    img = bmp24_allocate(temp_info.width, temp_info.height, temp_info.bits);
-    if (img == NULL) {
-        printf("Erreur : Échec de l'allocation mémoire pour la structure t_bmp24.\n");
+    if (colorDepth != DEFAULT_DEPTH) {
+        printf("Erreur: L'image n'est pas BMP 24 bits. %d\n", colorDepth);
         fclose(file);
         return NULL;
     }
 
-    //Copier en-têtes lues temporairement dans structure allouée
+    // Vérification des dimensions (on veut des multiples de 4)
+    // Pour traîter le padding
+    if (width % 4 != 0 || height % 4 != 0) {
+        printf("Avertissement: L'image %s n'a pas des dimensions multiples de 4. Le padding peut ne pas être géré correctement.\n", filename);
+    }
+
+    img = bmp24_allocate(width, height, colorDepth);
+    if (img == NULL) {
+        fclose(file);
+        return NULL;
+    }
+
+    // Lecture des en-têtes du fichier
+    file_rawRead(BITMAP_MAGIC, &temp_header.type, sizeof(uint16_t), 1, file);
+    file_rawRead(BITMAP_SIZE, &temp_header.size, sizeof(uint32_t), 1, file);
+    file_rawRead(0x04, &temp_header.reserved1, sizeof(uint16_t), 1, file);
+    file_rawRead(0x06, &temp_header.reserved2, sizeof(uint16_t), 1, file);
+    file_rawRead(BITMAP_OFFSET, &temp_header.offset, sizeof(uint32_t), 1, file);
+
+    if (temp_header.type != BMP_TYPE) {
+        printf("Erreur: Le fichier %s n'est pas un fichier BMP valide.\n", filename, temp_header.type);
+        bmp24_free(img);
+        fclose(file);
+        return NULL;
+    }
+
+    // Lecture des informations de l'image (header_info)
+    file_rawRead(HEADER_SIZE, &temp_info.size, sizeof(uint32_t), 1, file);
+    file_rawRead(BITMAP_WIDTH, &temp_info.width, sizeof(int32_t), 1, file);
+    file_rawRead(BITMAP_HEIGHT, &temp_info.height, sizeof(int32_t), 1, file);
+    file_rawRead(0x1A, &temp_info.planes, sizeof(uint16_t), 1, file);
+    file_rawRead(BITMAP_DEPTH, &temp_info.bits, sizeof(uint16_t), 1, file);
+    file_rawRead(0x1E, &temp_info.compression, sizeof(uint32_t), 1, file);
+    file_rawRead(BITMAP_SIZE_RAW, &temp_info.imagesize, sizeof(uint32_t), 1, file);
+    file_rawRead(0x26, &temp_info.xresolution, sizeof(int32_t), 1, file);
+    file_rawRead(0x2A, &temp_info.yresolution, sizeof(int32_t), 1, file);
+    file_rawRead(0x2E, &temp_info.ncolors, sizeof(uint32_t), 1, file);
+    file_rawRead(0x32, &temp_info.importantcolors, sizeof(uint32_t), 1, file);
+
     img->header = temp_header;
     img->header_info = temp_info;
 
-    // Vérification profondeur de couleur
-    if (img->colorDepth != DEFAULT_DEPTH) {
-        printf("Erreur : L'image %s n'est pas une image 24 bits (profondeur : %u).\n", filename, img->colorDepth);
-        bmp24_free(img);
-        fclose(file);
-        return NULL;
-    }
-
-    // Vérification largeur et hauteur de l'image ( = multiples de 4)
-    if ((img->width * sizeof(t_pixel)) % 4 != 0) {
-        printf("Attention: La largeur de l'image (%d) n'est pas un multiple de 4 octets par ligne (width * 3 = %d).\n", img->width, img->width * 3);
-    }
-
-    // Lecture données image et initialisation matrice de pixels avec bmp24_readPixelData
+    // Lecture des données de l'image et initialiser la matrice de pixels
     bmp24_readPixelData(img, file);
-
-
-
-    // Lecture en-tête (14 octets)
-    if (fread(&img->header, 1, HEADER_SIZE, file) != HEADER_SIZE) {
-        printf("Erreur : Lecture de l'en-tête du fichier incomplète pour %s.\n", filename);
-        bmp24_free(img);
-        fclose(file);
-        return NULL;
-    }
-
-    // Lecture informations de l'image (40 octets)
-    if (fread(&img->header_info, 1, INFO_SIZE, file) != INFO_SIZE) {
-        printf("Erreur : Lecture des infos de l'image incomplète pour %s.\n", filename);
-        bmp24_free(img);
-        fclose(file);
-        return NULL;
-    }
-
-    // Récupération des dimensions et la profondeur de couleur
-    img->width = img->header_info.width;
-    img->height = img->header_info.height;
-    img->colorDepth = img->header_info.bits;
-
-    if (img->colorDepth != DEFAULT_DEPTH) {
-        printf("Erreur : L'image %s n'est pas une image 24 bits (profondeur : %u).\n", filename, img->colorDepth);
-        bmp24_free(img);
-        fclose(file);
-        return NULL;
-    }
-
-    // Allocation matrice de pixels
-    img->data = bmp24_allocateDataPixels(img->width, img->height);
-    if (img->data == NULL) {
-        bmp24_free(img);
-        fclose(file);
-        return NULL;
-    }
-
-    // Position au début des pixels ( vérification si éventuelles autre informations avant )
-    fseek(file, img->header.offset, SEEK_SET);
-
-    // Calcul du padding par ligne
-    int row_byte_size = img->width * sizeof(t_pixel); // Largeur en octets sans padding
-    padding = (4 - (row_byte_size % 4)) % 4; // Nombre d'octets de padding
-
-    // Lire les pixels ligne par ligne, de bas en haut (format BMP)
-    for (i = img->height - 1; i >= 0; i--) {
-        for (j = 0; j < img->width; j++) {
-            if (fread(&img->data[i][j], sizeof(t_pixel), 1, file) != 1) {
-                printf("Erreur : Lecture des données de pixels incomplète pour %s.\n", filename);
-                bmp24_free(img);
-                fclose(file);
-                return NULL;
-            }
-        }
-        //octets de padding
-        fseek(file, padding, SEEK_CUR);
-    }
 
     fclose(file);
     return img;
 }
 
 void bmp24_saveImage (t_bmp24 * img, const char * filename) {
+    FILE *file = NULL;
 
     if (img == NULL) {
-        printf("Erreur : L'image à sauvegarder n'existe pas.\n");
+        printf("Erreur: L'image à sauvegarder est NULL.\n");
         return;
     }
 
-    FILE *file = NULL; // Pointeur vers le fichier à créer
-    int i, j;
-    int padding;        // Nombre d'octets de remplissage par ligne
-    unsigned char pad_byte = 0x00; //Octet nul pour le remplissage
-
-    // 2. Ouvrir le fichier en mode écriture binaire
-    file = fopen(filename, "wb"); // wb -> écriture en mode binaire
+    file = fopen(filename, "wb");
     if (file == NULL) {
-        printf("Erreur : Ouverture du fichier impossible %s pour l'écriture.\n", filename);
+        printf("Erreur: Impossible de créer ou ouvrir le fichier %s pour écriture.\n", filename);
         return;
     }
 
-    // Calculer les tailles et le padding
-    int row_byte_size = img->width * sizeof(t_pixel); // Taille d'une ligne de pixels en octets (sans padding)
-    padding = (4 - (row_byte_size % 4)) % 4;         // Calcul du nombre d'octets de padding
+    // Écriture en-tête du fichier (header)
+    file_rawWrite(BITMAP_MAGIC, &img->header.type, sizeof(uint16_t), 1, file);
+    file_rawWrite(BITMAP_SIZE, &img->header.size, sizeof(uint32_t), 1, file);
+    file_rawWrite(0x04, &img->header.reserved1, sizeof(uint16_t), 1, file);
+    file_rawWrite(0x06, &img->header.reserved2, sizeof(uint16_t), 1, file);
+    file_rawWrite(BITMAP_OFFSET, &img->header.offset, sizeof(uint32_t), 1, file);
 
-    // Calcul taille des données de pixels  (avec padding pour chaque ligne)
-    img->header_info.imagesize = (uint32_t)(img->height * (row_byte_size + padding));
+    // Écriture en-tête d'information (header_info)
+    file_rawWrite(HEADER_SIZE, &img->header_info.size, sizeof(uint32_t), 1, file);
+    file_rawWrite(BITMAP_WIDTH, &img->header_info.width, sizeof(int32_t), 1, file);
+    file_rawWrite(BITMAP_HEIGHT, &img->header_info.height, sizeof(int32_t), 1, file);
+    file_rawWrite(0x1A, &img->header_info.planes, sizeof(uint16_t), 1, file);
+    file_rawWrite(BITMAP_DEPTH, &img->header_info.bits, sizeof(uint16_t), 1, file);
+    file_rawWrite(0x1E, &img->header_info.compression, sizeof(uint32_t), 1, file);
+    file_rawWrite(BITMAP_SIZE_RAW, &img->header_info.imagesize, sizeof(uint32_t), 1, file);
+    file_rawWrite(0x26, &img->header_info.xresolution, sizeof(int32_t), 1, file);
+    file_rawWrite(0x2A, &img->header_info.yresolution, sizeof(int32_t), 1, file);
+    file_rawWrite(0x2E, &img->header_info.ncolors, sizeof(uint32_t), 1, file);
+    file_rawWrite(0x32, &img->header_info.importantcolors, sizeof(uint32_t), 1, file);
 
-    // Calcul taille totale du fichier (en-têtes + données de pixels)
-    img->header.size = (uint32_t)(HEADER_SIZE + INFO_SIZE + img->header_info.imagesize);
-
-    // L'offset des données est souvent juste après les en-têtes
-    img->header.offset = HEADER_SIZE + INFO_SIZE; // 14 (header) + 40 (info) = 54
-
-    // Ecriture en-tête du fichier (t_bmp_header - 14 octets)
-    fwrite(&img->header, 1, HEADER_SIZE, file);
-
-    // Ecriture informations de l'image (t_bmp_info - 40 octets)
-    fwrite(&img->header_info, 1, INFO_SIZE, file);
-
-    // Ecriture données des pixels
-    for (i = img->height - 1; i >= 0; i--) {
-        for (j = 0; j < img->width; j++) {
-            // Écrire les 3 octets (Bleu, Vert, Rouge) pour chaque pixel
-            fwrite(&img->data[i][j], sizeof(t_pixel), 1, file);
-        }
-        // Ecriture octets de padding
-        for (j = 0; j < padding; j++) {
-            fwrite(&pad_byte, 1, 1, file); // Ecriture octet null
-        }
-    }
+    // Écriture données des pixels
+    bmp24_writePixelData(img, file);
 
     fclose(file);
-    printf("Image sauvegardée sous : %s\n", filename);
 }
 
 /*
@@ -287,3 +239,50 @@ void file_rawWrite (uint32_t position, void * buffer, uint32_t size, size_t n, F
   fseek(file, position, SEEK_SET);
   fwrite(buffer, size, n, file);
 }
+
+void bmp24_readPixelValue (t_bmp24 * image, int x, int y, FILE * file) {
+    if (!image || !image->data || !file || x < 0 || x >= image->width || y < 0 || y >= image->height) return;
+    long offset = (long)(image->height - 1 - y) * image->width * sizeof(t_pixel) + (long)x * sizeof(t_pixel);
+
+    fseek(file, image->header.offset + offset, SEEK_SET);
+    fread(&(image->data[y][x]), sizeof(t_pixel), 1, file);
+}
+
+void bmp24_readPixelData (t_bmp24 * image, FILE * file) {
+    if (!image || !image->data || !file || image->width <= 0 || image->height <= 0) {
+        return;
+    }
+
+    long octets_par_ligne_reel = (long)image->width * sizeof(t_pixel);
+
+    fseek(file, image->header.offset, SEEK_SET);
+
+    for (int bmp_y = 0; bmp_y < image->height; bmp_y++) {
+        fread(image->data[image->height - 1 - bmp_y], sizeof(t_pixel), image->width, file);
+    }
+}
+
+void bmp24_writePixelValue (t_bmp24 * image, int x, int y, FILE * file) {
+    if (!image || !image->data || !file || x < 0 || x >= image->width || y < 0 || y >= image->height){
+        return;
+    }
+
+    long offset = (long)(image->height - 1 - y) * image->width * sizeof(t_pixel) + (long)x * sizeof(t_pixel);
+
+    fseek(file, image->header.offset + offset, SEEK_SET);
+    fwrite(&(image->data[y][x]), sizeof(t_pixel), 1, file);
+}
+
+void bmp24_writePixelData (t_bmp24 * image, FILE * file) {
+    if (!image || !image->data || !file || image->width <= 0 || image->height <= 0) {
+        return;
+    }
+    long octets_par_ligne_reel = (long)image->width * sizeof(t_pixel);
+
+    for (int image_y = 0; image_y < image->height; image_y++) {
+        long offset_debut_ligne = (long)(image->height - 1 - image_y) * octets_par_ligne_reel;
+        fseek(file, image->header.offset + offset_debut_ligne, SEEK_SET);
+        fwrite(image->data[image_y], sizeof(t_pixel), image->width, file);
+    }
+}
+

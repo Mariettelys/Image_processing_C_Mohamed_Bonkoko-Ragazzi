@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "bmp24.h"
+
 int main() {
 
     // fonction 2.1 bmp8_LoadImage
@@ -19,5 +21,8 @@ int main() {
 
     // fonction 4.1
     // bmp8_applyFilter()
+
+    //partie 2
+    bmp24_loadImage("flowers_color.bmp");
     return 0;
 }
