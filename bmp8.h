@@ -1,6 +1,12 @@
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdint.h>
+
+
+// Structures
 
 typedef struct {
 unsigned char header[54]; /* En tête */
@@ -13,7 +19,21 @@ unsigned int dataSize; /* taille des données de l'image en octets (offset 28 )*
 
 } t_bmp8;
 
-void  bmp8_saveImage( char filename, *t_bmp8 image);
-void bmp8_printInfo( t_bmp8* image );
-void bmp_brightness(t_bmp8* image, int value);
+
+// prototypes-------------------------------------------------------------
+//menu
+void menu_partie1_et_3_gris();
+void menu_partie2_et_3_couleur();
+
+// Partie 1 Image BMP 8 bits
+
+int bmp8_saveImage( const char* filename, t_bmp8 * image);
+void bmp8_printInfo(t_bmp8 *image);
+void bmp8_brightness(t_bmp8* image, int value);
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize);
+
+//Partie 3 Histogramme et égalisation-----------------------------------------------
+unsigned int * bmp8_computeHistogram(t_bmp8 * img);
+unsigned int * bmp8_computeCDF(unsigned int * hist);
+void bmp8_equalize(t_bmp8 * img, unsigned int * hist_eq);
+void bmp24_equalize(t_bmp24 * img);
