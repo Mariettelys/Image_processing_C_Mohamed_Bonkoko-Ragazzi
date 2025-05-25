@@ -78,6 +78,9 @@ typedef struct {
 #define DEFAULT_DEPTH 0x18 // 24
 
 // prototypes-------------------------------------------------------------
+//menu
+void menu_partie1_et_3_gris();
+void menu_partie2_et_3_couleur();
 
 // Partie 1 Image BMP 8 bits
 
