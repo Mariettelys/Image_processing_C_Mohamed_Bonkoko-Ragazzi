@@ -1,4 +1,3 @@
-
 #include "bmp8.h"
 #include "bmp24.h"
 #include <stdio.h>
@@ -198,8 +197,10 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
     unsigned int width = img->width; 
     unsigned int height = img->height;
 
-    
-    unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);// création d'un tableau pour stocker temporairement les nouvelles valeurs des pixels 
+    // création d'un tableau pour stocker temporairement les nouvelles valeurs des pixels 
+    unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);
+    // Erreur d'indentation ici, le if devait englober le printf et le return
+    if (nvdata == NULL) {
         printf("Erreur d'allocation mémoire pour nvdata dans bmp8_applyFilter.\n");
         return;
     }
@@ -485,5 +486,3 @@ void bmp24_equalize(t_bmp24 * img) {
     free(tableTransformationLuminance);
 
 }
-
-
