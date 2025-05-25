@@ -2,7 +2,6 @@
 #define BMP24_H
 
 #include "bmp24.h"
-#include "bmp8.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -511,6 +510,163 @@ void bmp24_convolution(t_bmp24 *img, float **kernel, int kernelSize) {
     }
     free(nvdata);
     nvdata = NULL;
+}
+
+// Partie 3
+void bmp24_equalize(t_bmp24 * img) {
+    //cette fonction prend une photo couleur, travaille sur sa luminosité pour la rendre plus équilibrée et avec un meilleur
+    //contraste, puis remet les couleurs d'origine avec cette nouvelle luminosité.
+
+    // vérifications
+    if (!img || !img->data || img->width <= 0 || img->height <= 0) {
+        printf("Erreur : L'image 24 bits fournie est invalide ou vide.\n");
+        return;
+    }
+
+    unsigned int nombreTotalPixels = img->width * img->height; //calcule le nombre de pixels total
+
+
+    t_pixel_yuv *pixelsYUV = (t_pixel_yuv *)malloc(nombreTotalPixels * sizeof(t_pixel_yuv)); // création d'un tableau temporaire pour stocker stocker la luminosité/ luminance et les couleurs de chaque pixel au format yuv
+    if (pixelsYUV == NULL) {
+        printf("Erreur : Impossible d'allouer la mémoire pour les pixels YUV.\n"); //
+        return;
+    }
+    unsigned char *valeursYLumieres = (unsigned char *)malloc(nombreTotalPixels * sizeof(unsigned char)); //  on alloue de la memoire pour un tableau qui permet de stocker uniquement Y la luminescence
+
+
+    if (pixelsYUV == NULL || valeursYLumieres == NULL) {
+        printf("Erreur d'allocation de pixelsYUV OU valeursYlumieres\n"); // on test si les allocations on fonctionnés et on vide les tableaux sinon
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+
+
+
+    for (int y = 0; y < img->height; y++) { //
+        for (int x = 0; x < img->width; x++) {
+            int indicePixel = y * img->width + x; // on utilise des indices de ligne
+
+            //On extrait les composantes rouge, verte et bleue du pixel situé à la position (x, y) dans l’image,
+            //et on les convertit en floats pour passer de rgb à yuv.
+            float valeurRouge = img->data[y][x].red;
+            float valeurVerte = img->data[y][x].green;
+            float valeurBleue = img->data[y][x].blue;
+
+
+            pixelsYUV[indicePixel].y_comp = 0.299f * valeurRouge + 0.587f * valeurVerte + 0.114f * valeurBleue; //calcule la luminance
+            pixelsYUV[indicePixel].u_comp = -0.14713f * valeurRouge - 0.28886f * valeurVerte + 0.436f * valeurBleue; //calcule la chrominance donne la teinte et la saturation
+            pixelsYUV[indicePixel].v_comp = 0.615f * valeurRouge - 0.51499f * valeurVerte - 0.10001f * valeurBleue;//calcule la chrominance
+
+            float valeurYlimTemp = round(pixelsYUV[indicePixel].y_comp);
+
+            // On délimite la valeur du pixel entre 0 et 255
+            if (valeurYlimTemp < 0.0f) {
+                valeurYlimTemp = 0.0f;
+            } else if (valeurYlimTemp > 255.0f) {
+                valeurYlimTemp = 255.0f;
+            }
+
+            // la valeur finale de la luminance est mise dans le tableau des niveaux de luminance après calcul .
+            unsigned int valeurYLimiteeArrondie = (unsigned int)valeurYlimTemp;
+            valeursYLumieres[indicePixel] = (unsigned char)valeurYLimiteeArrondie;
+
+        }
+    }
+
+    t_bmp8 imageLumianceTemporaire; // creation d'une copie de l'image d'origine où les couleurs sont remplacées par le luminace précédemment calculées
+    imageLumianceTemporaire.width = img->width;
+    imageLumianceTemporaire.height = img->height;
+    imageLumianceTemporaire.dataSize = nombreTotalPixels;
+    imageLumianceTemporaire.data = valeursYLumieres;
+
+
+    unsigned int *histogrammeLuminance = bmp8_computeHistogram(&imageLumianceTemporaire); // calcul de l'histogramme compte combien de pixels ont chaque niveau de luminosité.
+    if (histogrammeLuminance == NULL) { //verifications
+        printf("Erreur d'allocation du tableaux d'histogramme pour la luminance");
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+
+
+    // On utilise les comptes l'histogramme pour fabriquer une règle de calcul représentée par la table de transformation.
+    // Cette règle va nous dire comment transformer chaque niveau de lumière actuel pour l'egalisation .
+    unsigned int *tableTransformationLuminance = bmp8_computeCDF(histogrammeLuminance);
+    if (tableTransformationLuminance == NULL) { // teste l'allocation et libere la memoire allouée en cas d'echec
+        printf("Erreur : Échec lors du calcul de la CDF et de la table de transformation pour Y.\n");
+        free(histogrammeLuminance);
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+    // On parcourt toutes les luminosités de nos pixels.
+    for (unsigned int i = 0; i < nombreTotalPixels; i++) {
+        // Pour chaque pixel, on calcule sa nouvelle luminosité grace à la table de transformation  .
+        pixelsYUV[i].y_comp = (float)tableTransformationLuminance[valeursYLumieres[i]];
+    }
+
+    // On  remets les couleurs
+    for (int y = 0; y < img->height; y++) {
+        for (int x = 0; x < img->width; x++) {
+            int indicePixel = y * img->width + x;
+
+            // On prend la luminosité qu'on vient de calculer et les informations de couleur U et V d'origine du pixel.
+            float luminanceEgalisee = pixelsYUV[indicePixel].y_comp;
+            float chrominanceUOriginale = pixelsYUV[indicePixel].u_comp;
+            float chrominanceVOriginale = pixelsYUV[indicePixel].v_comp;
+
+            // On calcule les nouvelles valeurs rgb -> reconstruire le pixel original avec les couleurs rouge, verte et bleue mais avec la nouvelle luminosité qu'on a calculée,
+            //combinée avec les couleurs pures d'origine
+            float valeurRougeFlottante = luminanceEgalisee + 1.13983f * chrominanceVOriginale;
+            float valeurVerteFlottante = luminanceEgalisee - 0.39465f * chrominanceUOriginale - 0.58060f * chrominanceVOriginale;
+            float valeurBleueFlottante = luminanceEgalisee + 2.03211f * chrominanceUOriginale;
+
+            // On verifie que les nouvelles valeurs des pixels sont comprises entre  0 et 255
+            // Pour le Rouge :
+            int valeurRougeEntier = round(valeurRougeFlottante); // Arrondir la valeur
+            if (valeurRougeEntier < 0) { // Si inférieur à 0, mettre à 0
+                valeurRougeEntier = 0;
+            }
+            if (valeurRougeEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurRougeEntier = 255;
+            }
+            img->data[y][x].red = (uint8_t)valeurRougeEntier; // on modifie le rouge de l'image originale
+
+
+
+
+            // Pour le Vert :
+            int valeurVerteEntier = round(valeurVerteFlottante); // Arrondir la valeur
+            if (valeurVerteEntier < 0) { // Si inférieur à 0, mettre à 0
+                valeurVerteEntier = 0;
+            }
+            if (valeurVerteEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurVerteEntier = 255;
+            }
+            img->data[y][x].green = (uint8_t)valeurVerteEntier; // On modifie le vert de l'image originale
+
+
+
+
+
+            // Pour le Bleu :
+            int valeurBleueEntier = round(valeurBleueFlottante); // Arrondir la valeur
+            if (valeurBleueEntier < 0) { // Si inférieure à 0, mettre à 0
+                valeurBleueEntier = 0;
+            }
+            if (valeurBleueEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurBleueEntier = 255;
+            }
+            img->data[y][x].blue = (uint8_t)valeurBleueEntier; // On modifie le Bleu de l'image originale
+        }
+    }
+
+    free(pixelsYUV);
+    free(valeursYLumieres);
+    free(histogrammeLuminance);
+    free(tableTransformationLuminance);
+
 }
 
 #endif // BMP24_H

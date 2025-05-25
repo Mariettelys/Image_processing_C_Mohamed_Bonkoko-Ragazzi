@@ -114,3 +114,5 @@ void bmp24_convolution(t_bmp24 *img, float **kernel, int kernelSize);
 // Fonction qui transforme l'image couleur en une image binaire ( que du noir ou blanc )
 void bmp24_threshold(t_bmp24 *img, int threshold);
 
+// partie 3
+void bmp24_equalize(t_bmp24 * img);

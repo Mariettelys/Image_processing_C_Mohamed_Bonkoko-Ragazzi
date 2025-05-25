@@ -10,7 +10,7 @@ int main() {
     do {
         printf("\n-----------------MENU ---------------\n");
         printf("\nChoisissez le type d'image a traiter \n");
-        printf("1. Image en niveaux de gris : barbara_gray.bmp\n");
+        printf("1. Image en niveaux de gris : lena_gray.bmp\n");
         printf("2. Image couleur : flowers_colors.bmp \n");
         printf("0. Quitter\n");
         printf("Choix : ");
@@ -30,7 +30,7 @@ int main() {
 
 
 void menu_partie1_et_3_gris() {
-    t_bmp8 *img = bmp8_loadImage("barbara_gray.bmp");
+    t_bmp8 *img = bmp8_loadImage("../lena_gray.bmp");
     if (!img) return;
 
     int choix;
@@ -145,7 +145,7 @@ void menu_partie1_et_3_gris() {
 
 
 void menu_partie2_et_3_couleur() {
-    t_bmp24 *img = bmp24_loadImage("flowers_color.bmp");
+    t_bmp24 *img = bmp24_loadImage("../flowers_color.bmp");
     if (!img) return;
 
     int choix;
