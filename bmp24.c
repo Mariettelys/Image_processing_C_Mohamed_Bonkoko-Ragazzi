@@ -1,6 +1,8 @@
 //
-// Created by marie on 23/05/2025.
-//
+// Created by mariette on 23/05/2025.
+// fichier qui regroupe les fonctions relatives au traitement d'image colorées format BMP 24 bits
+// fonctions de la partie 2 du projet
+// fichier source bmp24.c : définitions des fonctions
 
 #include "bmp24.h"
 

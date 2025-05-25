@@ -1,6 +1,9 @@
 //
-// Created by marie on 23/05/2025.
-//
+// Created by mariette on 23/05/2025.
+// fichier qui regroupe les fonctions relatives au traitement d'image colorées format BMP 24 bits
+// fonctions de la partie 2 du projet
+// fichier header bmp24.h : prototypes des fonctions
+// + définitions des types t_pixel,t_bmp_header,t_bmp_info et t_bmp24
 
 #ifndef BMP24_H
 #define BMP24_H

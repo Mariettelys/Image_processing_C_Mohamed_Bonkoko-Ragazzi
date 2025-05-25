@@ -1,3 +1,10 @@
+//
+// auteur : mariette
+// fichier qui regroupe les fonctions relatives au traitement d'image en niveaux de gris format BMP 8 bits
+// fonctions de la partie 1 du projet
+// fichier header bmp8.h : prototypes des fonctions
+// + définition du type t_bmp8
+//
 #ifndef BMP8H
 #define BMP8_H
 
