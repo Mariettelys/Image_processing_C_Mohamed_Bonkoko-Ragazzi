@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include "bmp8.h"
 
-// Prototypes
-void menu_partie1_et_3_gris();
-void menu_partie2_et_3_couleur();
 
 int main() {
     int choix;
