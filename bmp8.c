@@ -1,72 +1,99 @@
+
 #include "bmp8.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-t_bmp8 * bmp8_loadImage(const char * filename){
-  // Ouvrir le fichier en mode binaire lecture ("rb")
-  FILE *file = fopen(filename, "rb" );
 
-  // Vérifies si l'ouverture du fichier a réussi
-  if (file == NULL){
-    printf("Erreur : ouverture du fichier %s impossible \n", filename);
-    return NULL;
-  }
 
-  // Alocation de la mémoire pour une image de type t_bmp8
-  t_bmp8 *img = (t_bmp8 *)malloc(sizeof(t_bmp8));
-  // Vérification allocation de la mémoire réussie
-  if (img==NULL){
-    printf("Erreur : mémoire insuffisante pour la création de l'image \n");
+// Partie 1-----------------------------------------------------------------
+
+t_bmp8 *bmp8_loadImage(const char *filename) {
+    FILE *file = NULL;
+    t_bmp8 *img = NULL;
+
+    // Ouverture du fichier en mode lecture binaire
+    file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("Erreur : Impossible d'ouvrir le fichier %s\n", filename);
+        return NULL;
+    }
+
+    // Allocation de la mémoire pour la structure t_bmp8
+    img = (t_bmp8 *)malloc(sizeof(t_bmp8));
+    if (img == NULL) {
+        printf("Erreur : Allocation de la mémoire impossible , espace insuffisant\n");
+        fclose(file);
+        return NULL;
+    }
+
+    // Lecture de l'en-tête du fichier (54 octets)
+    if (fread(img->header, 1, 54, file) != 54) {
+        printf("Erreur : Lecture de l'en-tête incomplète pour %s\n", filename);
+        bmp8_free(img);
+        fclose(file);
+        return NULL;
+    }
+
+    // Extraction des informations de l'en-tête et initialiser les champs de img
+    // Largeur (width) - Offset 18 (4 octets)
+    img->width = (unsigned int)(img->header[18] |
+                                (img->header[19] << 8) |
+                                (img->header[20] << 16) |
+                                (img->header[21] << 24));
+
+    // Hauteur (height) - Offset 22 (4 octets)
+    img->height = (unsigned int)(img->header[22] |
+                                 (img->header[23] << 8) |
+                                 (img->header[24] << 16) |
+                                 (img->header[25] << 24));
+
+    // Profondeur de couleur (colorDepth) - Offset 28 (2 octets)
+    // Ici short (16 bits), donc seulement 2 octets
+    img->colorDepth = (unsigned int)(img->header[28] |
+                                     (img->header[29] << 8));
+
+    // Taille des données de l'image (dataSize) - Offset 34 (4 octets)
+    img->dataSize = (unsigned int)(img->header[34] |
+                                   (img->header[35] << 8) |
+                                   (img->header[36] << 16) |
+                                   (img->header[37] << 24));
+
+    // Vérification de la profondeur de couleur (doit être 8 bits)
+    if (img->colorDepth != 8) {
+        printf("Erreur : L'image %s n'est pas une image 8 bits en niveaux de gris .\n", filename);
+        bmp8_free(img);
+        fclose(file);
+        return NULL;
+    }
+
+    // Lecture de la table de couleurs (1024 octets pour 8 bits)
+    if (fread(img->colorTable, 1, 1024, file) != 1024) {
+        printf("Erreur : Lecture de la table de couleurs incomplète pour %s\n", filename);
+        bmp8_free(img);
+        fclose(file);
+        return NULL;
+    }
+
+    // Allocation de la mémoire pour les données des pixels (data)
+    img->data = (unsigned char *)malloc(img->dataSize);
+    if (img->data == NULL) {
+        printf("Erreur : Allocation de la mémoire impossible pour les données des pixels de %s, espace insuffisant\n", filename);
+        bmp8_free(img);
+        fclose(file);
+        return NULL;
+    }
+
+    // Lecture des données des pixels
+    if (fread(img->data, 1, img->dataSize, file) != img->dataSize) {
+        printf("Erreur : Lecture des données de l'image incomplète pour %s\n", filename);
+        bmp8_free(img);
+        fclose(file);
+        return NULL;
+    }
+
     fclose(file);
-    return NULL;
-  }
-
-  // Lecture des 54 premiers octets de l'en-tête BMP
-  fread(img->header, sizeof(unsigned char), 54, file);
-
-  // Lecture des valeurs importantes de l'en-tête :
-  // La largeur de l'image (stockée à l'offset 18)
-  img->width = *(unsigned int*)&img->header[18];
-  // La hauteur de l'image (stockée à l'offset 22)
-  img->height = *(unsigned int*)&img->header[22];
-  // La profondeur de couleur (stockée à l'offset 28)
-  img->colorDepth = *(unsigned short*)&img->header[28];
-  // La taille des données de l'image (stockée à l'offset 34)
-  img->dataSize = *(unsigned int*)&img->header[34];
-
-  // Vérifie que l'image est bien en niveaux de gris (8 bits)
-  if ( img->colorDepth != 8) {
-    printf("Erreur : le fichier n'est pas une image en 8 bits. \n");
-    free(img);
-    fclose(file);
-    return NULL;
-  }
-
-  // Lecture de la Table de couleurs (1024 octets pour 8 bits)
-  fread(img->colorTable, sizeof(unsigned char),1024,file);
-
-  //On alloue la mémoire pour les données de l'image (pixels)
-  img->data = (unsigned char*)malloc(img->dataSize * sizeof(unsigned char));
-
-  //Vérifie que l'allocation de mémoire pour les données a réussi
-  if (img->data == NULL){
-    printf("Erreur : mémoire insuffisante pour les données de l'image \n");
-    // Libre la mémoire de la structure
-    free(img);
-    // Ferme le fichier
-    fclose(file);
-    return NULL;
-  }
-
-  // Lecture des données de l'image (pixels en niveaux de gris)
-  fread(img->data, sizeof(unsigned char), img->dataSize, file);
-
-  // Fermeture du fichier
-  fclose(file);
-
-  // Retour du pointeur versl'image chargée
-  return img;
+    return img;
 }
 
 void bmp8_free(t_bmp8 * img) {
@@ -98,64 +125,355 @@ void bmp8_threshold(t_bmp8 * img) {
   }
 }
 
-/***void bmp8_applyFilter(t_bmp8 * img, float ** kernel, int kernelSize) {
-  // Création autre tableau temporaire
-  int * tab = NULL;
-  int nb_pixels = img->height * img->width;
-  tab = (int *)malloc(nb_pixels*sizeof(int));
-
-  for ( int i = img->width +1 ; i< nb_pixels-img->width -1; i++) {
-    tab[i]=
-  }
-
-  int tab_mat[kernelSize*kernelSize];
-  for (int i = 0; i<kernelSize ; i++) {
-    for (int j = 0; j < kernelSize; j++) {
-      tab_mat[i+j*]= kernel[i][j];
+int bmp8_saveImage(const char *filename, t_bmp8 *image) {
+    // La fonction sauvegarde une image bmp8
+    FILE *imagedep = fopen(filename, "wb"); // Ouverture de l'image de départ en mode écriture binaire
+    if (imagedep == NULL) { // Vérifie si l'ouverture a fonctionné
+        printf( "Erreur d'ouverture de fichier ");
+        return 0;
     }
 
-  }
-}***/
+    size_t temp; // permet la vérification
 
-void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
-  int width = img->width;
-  int height = img->height;
-  int offset = kernelSize / 2;
-
-  // Allocation d'une nouvelle image temporaire pour stocker les nouvelles valeurs
-  unsigned char *newData = malloc(img->dataSize);
-  if (newData == NULL) {
-    printf("Erreur d'allocation mémoire pour le filtre.\n");
-    return;
-  }
-
-  // Parcours de l'image (hors bordure)
-  for (int y = offset; y < height - offset; y++) {
-    for (int x = offset; x < width - offset; x++) {
-      float sum = 0.0;
-
-      // Appliquer le noyau
-      for (int i = -offset; i <= offset; i++) {
-        for (int j = -offset; j <= offset; j++) {
-          int pixel = img->data[(y + i) * width + (x + j)];
-          float coeff = kernel[i + offset][j + offset];
-          sum += pixel * coeff;
-        }
-      }
-
-      // S'assurer d'être entre 0 et 255
-      int value = (int)roundf(sum);
-      if (value < 0) value = 0;
-      if (value > 255) value = 255;
-
-      newData[y * width + x] = (unsigned char)value;
+    // Écriture de l'en-tête
+    temp = fwrite(image->header, sizeof(unsigned char), 54, imagedep);
+    if (temp != 54) { // verifie que l'ecriture a bien fonctionné
+        printf( "Erreur d'écriture de l'en-tête.");
+        fclose(imagedep);
+        return 0;
     }
-  }
 
-  // Remplacer les anciennes données par les nouvelles
-  for (int i = 0; i < img->dataSize; i++) {
-    img->data[i] = newData[i];
-  }
+    // Écriture de la table de couleurs
+    temp = fwrite(image->colorTable, sizeof(unsigned char), 1024, imagedep);
+    if (temp != 1024) {
+        printf("Erreur d'écriture de la table des couleurs.");
 
-  free(newData);
+        fclose(imagedep);
+        return 0;
+    }
+
+    // Écriture des données des pixels
+    temp = fwrite(image->data, sizeof(unsigned char), image->dataSize, imagedep);
+    if (temp != image->dataSize) {
+        printf("Erreur d'écriture des données de l'image");
+        fclose(imagedep);
+        return 0;
+    }
+
+    fclose(imagedep);
+    return 1;
 }
+void bmp8_printInfo(t_bmp8 *image) {
+    //Affiche les informations liées à l'image bmp
+    printf("Image Info:\n");
+    printf("\tWidth: %u pixels\n", image->width);
+    printf("\tHeight: %u pixels\n", image->height);
+    printf("\tColor Depth: %u bits\n", image->colorDepth);
+    printf("\tData Size: %u bytes\n", image->dataSize);
+}
+void bmp8_brightness(t_bmp8 *image, int value) { // la fonction permet d'ajuster la lumiosité d'une image : eclaircir ou foncer , elle permet d'ajouter ou de retirer une valeur à des pixels selon si la
+    //si value est negatif on assombri, sinon on eclaircis
+    for (unsigned int i = 0; i < image->dataSize; i++) { // parcours chaque pixels
+        int nvpixel = image->data[i] + value; //ajoute ou retir à la veleur actuelle du pixel
+        // vérifications
+        if (nvpixel > 255) {
+            nvpixel = 255;
+        }
+        if (nvpixel < 0) {
+            nvpixel = 0;
+        }
+
+        image->data[i] = (unsigned char)nvpixel;
+    }
+}
+void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
+    if (!img || !img->data || !kernel || kernelSize <= 0 || kernelSize % 2 == 0) {
+        printf("Erreur: Paramètres invalides pour bmp8_applyFilter.\n");
+        return;
+    }
+
+    int n = kernelSize / 2;
+    unsigned int width = img->width;
+    unsigned int height = img->height;
+
+    unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);
+    if (nvdata == NULL) {
+        printf("Erreur d'allocation mémoire pour nvdata dans bmp8_applyFilter.\n");
+        return;
+    }
+
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        nvdata[i] = img->data[i];
+    }
+
+    for (unsigned int y = n; y < height - n; y++) {
+        for (unsigned int x = n; x < width - n; x++) {
+            float somme_ponderee = 0.0f;
+            for (int yy = -n; yy <= n; yy++) {
+                for (int xx = -n; xx <= n; xx++) {
+                    int voisinX = x + xx;
+                    int voisinY = y + yy;
+                    unsigned char pixelVoisin = img->data[voisinY * width + voisinX];
+                    float coeff = kernel[yy + n][xx + n];
+                    somme_ponderee += pixelVoisin * coeff;
+                }
+            }
+
+            if (somme_ponderee > 255.0f) {
+                somme_ponderee = 255.0f;
+            } else if (somme_ponderee < 0.0f) {
+                somme_ponderee = 0.0f;
+            }
+
+            nvdata[y * width + x] = (unsigned char)round(somme_ponderee);
+        }
+    }
+
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        img->data[i] = nvdata[i];
+    }
+
+    free(nvdata);
+    nvdata = NULL;
+}
+
+
+//Partie 3---------------------------------------------------------------
+
+// Images en gris
+unsigned int * bmp8_computeHistogram(t_bmp8 * img) {
+    /*calcule l'histogramme de l'image */
+    unsigned int *histogram = (unsigned int *)calloc(256, sizeof(unsigned int)); /*création du tableau pour les 256 niveaux de gris possibles  et initialisation à 0*/
+
+    if (histogram == NULL) {// vérifier si l'allocation a réussi
+        printf( "Erreur d'allocation mémoire pour l'histogramme.");
+        return NULL;
+    }
+    // Calcul des valeurs de gris chaque i correspond à 1 pixels
+    for (unsigned int i = 0; i < img->dataSize; i++) { // Parcours  chaque pixel
+        histogram[img->data[i]]+=1; // Incrémente le compteur si on trouve un autre pixel avec cette valeur de gris
+    }
+
+    return histogram;
+}
+unsigned int * bmp8_computeCDF(unsigned int * hist) {
+    /*creer un tableau qui contient, à chaque indice,  la somme de l'occurrence de tous les pixels
+     *qui ont un certain niveau de gris ou un niveau de gris inférieur
+     *à celui ci*/
+
+    unsigned int *cdf = (unsigned int *)calloc(256, sizeof(unsigned int)); /*création du tableau pour les 256 niveaux de gris possibles et pour la cdf et initialisation à 0*/
+    unsigned int *hist_eq = (unsigned int *)calloc(256, sizeof(unsigned int));
+
+    if (cdf == NULL || hist_eq == NULL) { // vérifie si les allocations ont reussi
+        printf("Echec d'allocation mémoire pour la CDF ou hist_eq.");
+        free(cdf); // libere la memoire conenue dans cdf
+        free(hist_eq);
+        return NULL;
+    }
+
+    // Calcul de la CDF
+    cdf[0] = hist[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i - 1] + hist[i];
+    }
+
+    unsigned int N = cdf[255]; // Nombre  de pixel de l'image
+
+    // Trouver cdf_min
+    unsigned int cdf_min = 0;
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] > 0) {
+            cdf_min = cdf[i];
+            break;
+        }
+    }
+    // Si cdf_min est 0, on ne peut pas diviser par 0, donc on le remplace par 1
+    double denominator = (double)N - cdf_min;
+    if (denominator == 0) {
+        denominator = 1;
+    }
+
+    // Etapes de normalisation de la CDF selon la formule donnée dans le projet
+    for (int i = 0; i < 256; i++) {
+        double numerator = (double)cdf[i] - cdf_min;
+        hist_eq[i] = (unsigned int)round((numerator / denominator) * 255.0);
+
+        // Verifie que la valeur est bien entre 0 et 255
+        if (hist_eq[i] > 255) hist_eq[i] = 255;
+    }
+    free(cdf);
+    return hist_eq;
+
+}
+
+void bmp8_equalize(t_bmp8 * img, unsigned int * hist_eq){ /*chaque pixel pour une valeur de gris i est remplacé par une valeur associée déterminée à partir de la cdf et de la normalisation */
+    unsigned int * hist= bmp8_computeHistogram(img); // creation de l'histogramme
+    hist_eq =bmp8_computeCDF(hist); // Calcul de l’histogramme cumulé et normalisation
+
+    for (int i = 0; i < img->dataSize ; i++) {
+
+        img->data[i] = hist_eq[ img->data[i] ]; // remplace la valeur du pixel de l'image de départ par sa nouvelle valeur calculée à partir de la normalisation
+    }
+    free(hist);
+    free(hist_eq);
+    return;
+
+}
+//Image en couleur 24 bits
+void bmp24_equalize(t_bmp24 * img) {
+    //cette fonction prend une photo couleur, travaille sur sa luminosité pour la rendre plus équilibrée et avec un meilleur
+    //contraste, puis remet les couleurs d'origine avec cette nouvelle luminosité.
+
+    // vérifications
+    if (!img || !img->data || img->width <= 0 || img->height <= 0) {
+        printf("Erreur : L'image 24 bits fournie est invalide ou vide.\n");
+        return;
+    }
+
+    unsigned int nombreTotalPixels = img->width * img->height; //calcule le nombre de pixels total
+
+
+    t_pixel_yuv *pixelsYUV = (t_pixel_yuv *)malloc(nombreTotalPixels * sizeof(t_pixel_yuv)); // création d'un tableau temporaire pour stocker stocker la luminosité/ luminance et les couleurs de chaque pixel au format yuv
+    if (pixelsYUV == NULL) {
+        printf("Erreur : Impossible d'allouer la mémoire pour les pixels YUV.\n"); //
+        return;
+    }
+    unsigned char *valeursYLumieres = (unsigned char *)malloc(nombreTotalPixels * sizeof(unsigned char)); //  on alloue de la memoire pour un tableau qui permet de stocker uniquement Y la luminescence
+
+
+    if (pixelsYUV == NULL || valeursYLumieres == NULL) {
+        printf("Erreur d'allocation de pixelsYUV OU valeursYlumieres\n"); // on test si les allocations on fonctionnés et on vide les tableaux sinon
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+
+
+
+    for (int y = 0; y < img->height; y++) { //
+        for (int x = 0; x < img->width; x++) {
+            int indicePixel = y * img->width + x; // on utilise des indices de ligne
+
+            //On extrait les composantes rouge, verte et bleue du pixel situé à la position (x, y) dans l’image,
+            //et on les convertit en floats pour passer de rgb à yuv.
+            float valeurRouge = img->data[y][x].red;
+            float valeurVerte = img->data[y][x].green;
+            float valeurBleue = img->data[y][x].blue;
+
+
+            pixelsYUV[indicePixel].y_comp = 0.299f * valeurRouge + 0.587f * valeurVerte + 0.114f * valeurBleue; //calcule la luminance
+            pixelsYUV[indicePixel].u_comp = -0.14713f * valeurRouge - 0.28886f * valeurVerte + 0.436f * valeurBleue; //calcule la chrominance donne la teinte et la saturation
+            pixelsYUV[indicePixel].v_comp = 0.615f * valeurRouge - 0.51499f * valeurVerte - 0.10001f * valeurBleue;//calcule la chrominance
+
+            float valeurYlimTemp = round(pixelsYUV[indicePixel].y_comp);
+
+            // On délimite la valeur du pixel entre 0 et 255
+            if (valeurYlimTemp < 0.0f) {
+                valeurYlimTemp = 0.0f;
+            } else if (valeurYlimTemp > 255.0f) {
+                valeurYlimTemp = 255.0f;
+            }
+
+            // la valeur finale de la luminance est mise dans le tableau des niveaux de luminance après calcul .
+            unsigned int valeurYLimiteeArrondie = (unsigned int)valeurYlimTemp;
+            valeursYLumieres[indicePixel] = (unsigned char)valeurYLimiteeArrondie;
+
+        }
+    }
+
+    t_bmp8 imageLumianceTemporaire; // creation d'une copie de l'image d'origine où les couleurs sont remplacées par le luminace précédemment calculées
+    imageLumianceTemporaire.width = img->width;
+    imageLumianceTemporaire.height = img->height;
+    imageLumianceTemporaire.dataSize = nombreTotalPixels;
+    imageLumianceTemporaire.data = valeursYLumieres;
+
+
+    unsigned int *histogrammeLuminance = bmp8_computeHistogram(&imageLumianceTemporaire); // calcul de l'histogramme compte combien de pixels ont chaque niveau de luminosité.
+    if (histogrammeLuminance == NULL) { //verifications
+        printf("Erreur d'allocation du tableaux d'histogramme pour la luminance");
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+
+
+    // On utilise les comptes l'histogramme pour fabriquer une règle de calcul représentée par la table de transformation.
+    // Cette règle va nous dire comment transformer chaque niveau de lumière actuel pour l'egalisation .
+    unsigned int *tableTransformationLuminance = bmp8_computeCDF(histogrammeLuminance);
+    if (tableTransformationLuminance == NULL) { // teste l'allocation et libere la memoire allouée en cas d'echec
+        printf("Erreur : Échec lors du calcul de la CDF et de la table de transformation pour Y.\n");
+        free(histogrammeLuminance);
+        free(pixelsYUV);
+        free(valeursYLumieres);
+        return;
+    }
+    // On parcourt toutes les luminosités de nos pixels.
+    for (unsigned int i = 0; i < nombreTotalPixels; i++) {
+        // Pour chaque pixel, on calcule sa nouvelle luminosité grace à la table de transformation  .
+        pixelsYUV[i].y_comp = (float)tableTransformationLuminance[valeursYLumieres[i]];
+    }
+
+    // On  remets les couleurs
+    for (int y = 0; y < img->height; y++) {
+        for (int x = 0; x < img->width; x++) {
+            int indicePixel = y * img->width + x;
+
+            // On prend la luminosité qu'on vient de calculer et les informations de couleur U et V d'origine du pixel.
+            float luminanceEgalisee = pixelsYUV[indicePixel].y_comp;
+            float chrominanceUOriginale = pixelsYUV[indicePixel].u_comp;
+            float chrominanceVOriginale = pixelsYUV[indicePixel].v_comp;
+
+            // On calcule les nouvelles valeurs rgb -> reconstruire le pixel original avec les couleurs rouge, verte et bleue mais avec la nouvelle luminosité qu'on a calculée,
+            //combinée avec les couleurs pures d'origine
+            float valeurRougeFlottante = luminanceEgalisee + 1.13983f * chrominanceVOriginale;
+            float valeurVerteFlottante = luminanceEgalisee - 0.39465f * chrominanceUOriginale - 0.58060f * chrominanceVOriginale;
+            float valeurBleueFlottante = luminanceEgalisee + 2.03211f * chrominanceUOriginale;
+
+            // On verifie que les nouvelles valeurs des pixels sont comprises entre  0 et 255
+            // Pour le Rouge :
+            int valeurRougeEntier = round(valeurRougeFlottante); // Arrondir la valeur
+            if (valeurRougeEntier < 0) { // Si inférieur à 0, mettre à 0
+                valeurRougeEntier = 0;
+            }
+            if (valeurRougeEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurRougeEntier = 255;
+            }
+            img->data[y][x].red = (uint8_t)valeurRougeEntier; // on modifie le rouge de l'image originale
+
+
+
+
+            // Pour le Vert :
+            int valeurVerteEntier = round(valeurVerteFlottante); // Arrondir la valeur
+            if (valeurVerteEntier < 0) { // Si inférieur à 0, mettre à 0
+                valeurVerteEntier = 0;
+            }
+            if (valeurVerteEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurVerteEntier = 255;
+            }
+            img->data[y][x].green = (uint8_t)valeurVerteEntier; // On modifie le vert de l'image originale
+
+
+
+
+
+            // Pour le Bleu :
+            int valeurBleueEntier = round(valeurBleueFlottante); // Arrondir la valeur
+            if (valeurBleueEntier < 0) { // Si inférieure à 0, mettre à 0
+                valeurBleueEntier = 0;
+            }
+            if (valeurBleueEntier > 255) { // Si supérieur à 255, mettre à 255
+                valeurBleueEntier = 255;
+            }
+            img->data[y][x].blue = (uint8_t)valeurBleueEntier; // On modifie le Bleu de l'image originale
+        }
+    }
+
+    free(pixelsYUV);
+    free(valeursYLumieres);
+    free(histogrammeLuminance);
+    free(tableTransformationLuminance);
+
+}
+
+
