@@ -286,3 +286,127 @@ void bmp24_writePixelData (t_bmp24 * image, FILE * file) {
     }
 }
 
+// Fonction qui inverse les couleurs de l'image 24 bits
+void bmp24_negative(t_bmp24 *img) {
+    if (img == NULL || img->data == NULL) {
+        printf("Erreur: La fonctionnalité négatif ne peut pas être appliquée.\n");
+        return;
+    }
+
+    // Inversion des couleurs de chaque pixel
+    for (int x = 0; x < img->height; x++) {
+        for (int y = 0; y < img->width; y++) {
+            img->data[x][y].red = 255 - img->data[x][y].red;
+            img->data[x][y].green = 255 - img->data[x][y].green;
+            img->data[x][y].blue = 255 - img->data[x][y].blue;
+        }
+    }
+}
+
+// Fonction qui ajuste la luminosité d'une image 24 bits
+void bmp24_brightness(t_bmp24 *img, int value) {
+    if (img == NULL || img->data == NULL) {
+        printf("Erreur: La fonctionnalité luminosité ne peut pas être appliquée.\n");
+        return;
+    }
+
+    // Modification ( ajout ou soustraction de valeur de chaque pixel dans chaque canal )
+    for (int x = 0; x < img->height; x++) {
+        for (int y = 0; y < img->width; y++) {
+            // Canal Rouge
+            int new_red = (int)img->data[x][y].red + value;
+            if (new_red > 255) {
+                img->data[x][y].red = 255;
+            } else if (new_red < 0) {
+                img->data[x][y].red = 0;
+            } else {
+                img->data[x][y].red = new_red;
+            }
+
+            // Canal Vert
+            int new_green = (int)img->data[x][y].green + value;
+            if (new_green > 255) {
+                img->data[x][y].green = 255;
+            } else if (new_green < 0) {
+                img->data[x][y].green = 0;
+            } else {
+                img->data[x][y].green = new_green;
+            }
+
+            // Canal Bleu
+            int new_blue = (int)img->data[x][y].blue + value;
+            if (new_blue > 255) {
+                img->data[x][y].blue = 255;
+            } else if (new_blue < 0) {
+                img->data[x][y].blue = 0;
+            } else {
+                img->data[x][y].blue = new_blue;
+            }
+        }
+    }
+}
+
+// Fonction qui convertit une image 24 bits en niveau de gris
+void bmp24_grayscale(t_bmp24 *img) {
+    if (img == NULL || img->data == NULL) {
+        printf("Erreur: La fonctionnalité conversion en niveaux de gris ne peut pas être appliquée.\n");
+        return;
+    }
+
+    //  Calcule l'intensité de gris pour chaque pixel
+    //  en utilisant une moyenne pondérée
+    //  et applique cette valeur à tous les canaux(Rouge, Vert, Bleu) du pixel
+    for (int x = 0; x < img->height; x++) {
+        for (int y = 0; y < img->width; y++) {
+            // Récupération des valeurs RVB du pixel actuel
+            uint8_t r = img->data[x][y].red;
+            uint8_t g = img->data[x][y].green;
+            uint8_t b = img->data[x][y].blue;
+
+            // Calculer l'intensité de gris -> formule de luminance
+            // Utilisation de float pour le calcul pour plus de précision, puis arrondi
+            double gray_value = (0.299 * r + 0.587 * g + 0.114 * b);
+
+
+            // round() -> arrondir, fmax/fmin pour clamper( forcer à rester entre 2 bornes)
+            // Conversion du double en uint8_t (unsigned char).
+            uint8_t final_gray = (uint8_t)round(fmax(0.0, fmin(255.0, gray_value)));
+
+            // même valeur de gris aux trois canaux du pixel
+            img->data[x][y].red = final_gray;
+            img->data[x][y].green = final_gray;
+            img->data[x][y].blue = final_gray;
+        }
+    }
+}
+
+
+// Bonus
+// Fonction qui convertie une image 24 bits en noir et blanc en se basant sur une moyenne de l'intensité de chaque pixel
+void bmp24_threshold(t_bmp24 *img, int threshold) {
+    if (img == NULL || img->data == NULL) {
+        printf("Erreur: La fonctionnalité de seuillage ne peut pas être appliquée.\n");
+        return;
+    }
+
+    // Vérification du seuil dans les limites valides
+    if (threshold < 0) threshold = 0;
+    if (threshold > 255) threshold = 255;
+
+    for (int x = 0; x < img->height; x++) {
+        for (int y = 0; y < img->width; y++) {
+            // Calcul intensité moyenne du pixel
+            int intensity = (img->data[x][y].red + img->data[x][y].green + img->data[x][y].blue) / 3;
+
+            if (intensity >= threshold) {
+                img->data[x][y].red = 255;
+                img->data[x][y].green = 255;
+                img->data[x][y].blue = 255; // Blanc
+            } else {
+                img->data[x][y].red = 0;
+                img->data[x][y].green = 0;
+                img->data[x][y].blue = 0;   // Noir
+            }
+        }
+    }
+}
