@@ -38,9 +38,6 @@ void bmp8_negative(t_bmp8 * img);
 // Fonction qui permet de transformer une image en niveaux de gris en une image binaire
 void bmp8_threshold(t_bmp8 * img);
 
-// Fonction qui applique un filtre sur une image en niveaux de gris
-void bmp8_applyFilter(t_bmp8 * img, float ** kernel, int kernelSize);
-
 int bmp8_saveImage( const char* filename, t_bmp8 * image);
 void bmp8_printInfo(t_bmp8 *image);
 void bmp8_brightness(t_bmp8* image, int value);
