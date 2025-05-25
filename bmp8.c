@@ -70,52 +70,61 @@ void bmp8_brightness(t_bmp8 *image, int value) { // la fonction permet d'ajuster
     }
 }
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
-    if (!img || !img->data || !kernel || kernelSize <= 0 || kernelSize % 2 == 0) {
+    /* Applique un filtre à une image img  8 bits en niveaux de gris à l'aide du kernel en paramètre  (noyau ) qui correspond à un filtre et de la taille du noyau kernelSize on traite un pixel en fonction des pixels autour  */
+    if (!img || !img->data || !kernel || kernelSize <= 0 || kernelSize % 2 == 0) {//Verifications 
         printf("Erreur: Paramètres invalides pour bmp8_applyFilter.\n");
         return;
     }
 
-    int n = kernelSize / 2;
-    unsigned int width = img->width;
+    int n = kernelSize / 2; // Rayon du pixel, utilisé pour traiter les pixels autour 
+    unsigned int width = img->width; 
     unsigned int height = img->height;
 
-    unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);
-    if (nvdata == NULL) {
+    
+    unsigned char *nvdata = (unsigned char *)malloc(img->dataSize);// création d'un tableau pour stocker temporairement les nouvelles valeurs des pixels 
         printf("Erreur d'allocation mémoire pour nvdata dans bmp8_applyFilter.\n");
         return;
     }
 
+    // Copie les données originales dans le tableau temporaire pour le traitement
     for (unsigned int i = 0; i < img->dataSize; i++) {
         nvdata[i] = img->data[i];
     }
 
+    // Parcourt les pixels de l'image en évitant les bords 
     for (unsigned int y = n; y < height - n; y++) {
         for (unsigned int x = n; x < width - n; x++) {
-            float somme_ponderee = 0.0f;
+            float somme_ponderee = 0.0f; // Initialise  la somme utilisée pour calculer la nouvelle valeur du pixel en fonction du kernel et de ses pixels voisins pour chaque pixel 
+            
+            // Parcourt les voisins du pixel central selon la taille du noyau
             for (int yy = -n; yy <= n; yy++) {
                 for (int xx = -n; xx <= n; xx++) {
-                    int voisinX = x + xx;
+                    int voisinX = x + xx; // Coordonnées du pixel voisin
                     int voisinY = y + yy;
-                    unsigned char pixelVoisin = img->data[voisinY * width + voisinX];
-                    float coeff = kernel[yy + n][xx + n];
-                    somme_ponderee += pixelVoisin * coeff;
+                    unsigned char pixelVoisin = img->data[voisinY * width + voisinX]; // recupere la aleur du pixel voisin
+                    float coeff = kernel[yy + n][xx + n]; // Coefficient du noyau correspondant
+                    somme_ponderee += pixelVoisin * coeff; // Ajoute à somme ponderee la somme des valeurs des pixels voisins à x  modifiée par le coefficient du kernel 
                 }
             }
 
+            // limite la valeur entre 0 et 255
             if (somme_ponderee > 255.0f) {
                 somme_ponderee = 255.0f;
             } else if (somme_ponderee < 0.0f) {
                 somme_ponderee = 0.0f;
             }
 
+            // Affecte la nouvelle valeur arrondie au pixel dans le tableau temporaire nvdata 
             nvdata[y * width + x] = (unsigned char)round(somme_ponderee);
         }
     }
 
+    // Modifie l'image originale 
     for (unsigned int i = 0; i < img->dataSize; i++) {
         img->data[i] = nvdata[i];
     }
 
+    
     free(nvdata);
     nvdata = NULL;
 }
@@ -125,7 +134,7 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
 
 // Images en gris
 unsigned int * bmp8_computeHistogram(t_bmp8 * img) {
-    /*calcule l'histogramme de l'image */
+    /*calcule l'histogramme de l'image le nombre d'apparitions de chaque niveau de gris dans l'image */
     unsigned int *histogram = (unsigned int *)calloc(256, sizeof(unsigned int)); /*création du tableau pour les 256 niveaux de gris possibles  et initialisation à 0*/
 
     if (histogram == NULL) {// vérifier si l'allocation a réussi
