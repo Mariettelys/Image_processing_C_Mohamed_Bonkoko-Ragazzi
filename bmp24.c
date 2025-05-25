@@ -1,3 +1,6 @@
+#ifndef BMP24_H
+#define BMP24_H
+
 #include "bmp24.h"
 #include "bmp8.h"
 #include <stdio.h>
@@ -509,3 +512,5 @@ void bmp24_convolution(t_bmp24 *img, float **kernel, int kernelSize) {
     free(nvdata);
     nvdata = NULL;
 }
+
+#endif // BMP24_H
