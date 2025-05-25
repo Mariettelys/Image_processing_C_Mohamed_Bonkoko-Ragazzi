@@ -108,6 +108,8 @@ void bmp24_grayscale (t_bmp24 * img);
 // Fonction qui rend l'image plus claire ou plus sombre
 void bmp24_brightness (t_bmp24 * img, int value);
 
+void bmp24_convolution(t_bmp24 *img, float **kernel, int kernelSize);
+
 // Bonus
 // Fonction qui transforme l'image couleur en une image binaire ( que du noir ou blanc )
 void bmp24_threshold(t_bmp24 *img, int threshold);
