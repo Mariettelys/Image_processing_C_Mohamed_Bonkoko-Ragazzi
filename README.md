@@ -40,3 +40,58 @@ Les bugs connus :
 - Le chargement et la sauvegarde de l'image barbara_gray.bmp fonctionne mal.
 Alors que le chargement et la sauvegarde de l'image lena_gray.bmp fonctionne très bien.
 - Pour charger l'image flowers_colors.bmp il faut la nommer "../flowers_color.bmp"
+
+- Répartition des tâches :
+
+Anissa :
+Implémentation du Menu 
+Debeugage 
+
+Partie 1 : Image BMP 8 bits
+bmp8_saveImage
+bmp8_printInfo
+bmp8_brightness
+bmp8_applyFilter
+
+Partie 2 : Image BMP 24 bits
+
+readPixelData
+bmp24_writePixelValue
+bmp24_readPixelValue
+bmp24_writePixelData
+bmp24_convolution
+
+Partie 3 : Histogramme et Égalisation
+bmp8_computeHistogram
+bmp8_computeCDF
+bmp8_equalize
+bmp24_equalize
+
+
+Tâches de Mariette
+Read me 
+Debeugage
+Commit intermediaire 
+Partie 1 : Image BMP 8 bits
+bmp8_loadImage
+bmp8_free
+bmp8_negative
+bmp8_threshold
+
+Partie 2 : Image BMP 24 bits
+bmp24_saveImage
+bmp24_negative
+bmp24_grayscale
+bmp24_brightness
+bmp24_free
+bmp24_allocate
+bmp24_loadImage
+file_rawRead
+file_rawWrite
+bmp24_threshold
+
+Tâches communes à Mariette et Anissa :
+Réalisation de la soutenance et du powerpoint 
+bmp8_applyFilter
+bmp24_allocateDataPixels
+bmp24_freeDataPixels
