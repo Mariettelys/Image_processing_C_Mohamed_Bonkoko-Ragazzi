@@ -73,34 +73,53 @@ typedef struct {
 } t_bmp24;
 
 // Allocation et libération de mémoire
+
+// Fonction qui crée un espace mémoire pour stocker tous les pixels d'une image couleur format BMP 24 bits
 t_pixel ** bmp24_allocateDataPixels (int width, int height);
+// Fonction qui libère la mémoire qui avait été réservée pour les pixels d'une image couleur.
 void bmp24_freeDataPixels (t_pixel ** pixels, int height);
 
+// Fonction qui réserve toute la mémoire nécessaire pour une image couleur, y compris son en-tête et ses pixels.
 t_bmp24 * bmp24_allocate (int width, int height, int colorDepth);
+// Fonction qui libère la mémoire qui avait été réservée pour une image couleur
 void bmp24_free(t_bmp24 * img);
+
 
 // Lecture et écriture d'image 24 bits
 
+//Fonction qui ouvre un fichier BMP couleur, lit toutes ses informations (en-têtes et pixels) et crée l'image en mémoire
 t_bmp24 * bmp24_loadImage (const char * filename);
+// Fonction qui prend une image couleur de la mémoire et l'enregistre entièrement dans un nouveau fichier BMP
 void bmp24_saveImage (t_bmp24 * img, const char * filename);
+
 
 // Lecture et écriture dans un fichier
 void file_rawRead (uint32_t position, void * buffer, uint32_t size, size_t n, FILE * file);
 void file_rawWrite (uint32_t position, void * buffer, uint32_t size, size_t n, FILE * file);
 
+
 // Lecture et écriture des données de l'image
 
+// Fonction qui lit les couleurs de chaque pixel depuis un fichier BMP et les met dans la mémoire de l'image
 void bmp24_readPixelValue (t_bmp24 * image, int x, int y, FILE * file);
+// Fonction qui
 void bmp24_readPixelData (t_bmp24 * image, FILE * file);
+// Fonction qui écrit les couleurs d'un seul pixel à un endroit précis dans le fichier BMP
 void bmp24_writePixelValue (t_bmp24 * image, int x, int y, FILE * file);
+// Fonction qui écrit toutes les couleurs de tous les pixels de l'image dans le fichier BMP
 void bmp24_writePixelData (t_bmp24 * image, FILE * file);
 
 // Fonctionnalités traitement d'image 24 bits
 
+// Fonction qui inverse toutes les couleurs de l'image, ( rouge -> bleu clair/cyan, vert -> magenta, bleu -> jaune)
 void bmp24_negative(t_bmp24 * img);
+// Fonction qui convertit une image couleur en une version en niveaux de gris, où chaque pixel devient une nuance de gris allant du noir au blanc
 void bmp24_grayscale (t_bmp24 * img);
+// Fonction qui rend l'image plus claire ou plus sombre
 void bmp24_brightness (t_bmp24 * img, int value);
+
 // Bonus
+// Fonction qui transforme l'image couleur en une image binaire ( que du noir ou blanc )
 void bmp24_threshold(t_bmp24 *img, int threshold);
 
 #endif //BMP24_H

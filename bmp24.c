@@ -12,22 +12,21 @@
 //Allocation matrice de t_pixel
 t_pixel ** bmp24_allocateDataPixels (int width, int height) {
   t_pixel **pixels = NULL; // Pointeur vers tableau de pointeurs de pixels
-  int i;
+
   // Allocation pointeur de pointeurs de lignes pour le tableau
   pixels = (t_pixel **)malloc(height * sizeof(t_pixel *));
   if (pixels == NULL) {
-    fprintf(stderr, "Erreur: allocation mémoire impossible pour les pointeurs de lignes de pixels.\n");
+    printf("Erreur: allocation mémoire impossible pour les pointeurs de lignes de pixels.\n");
     return NULL;
   }
 
   // Allouer chaque ligne (width pixels)
-  for (i = 0; i < height; i++) {
+  for (int i = 0; i < height; i++) {
     pixels[i] = (t_pixel *)malloc(width * sizeof(t_pixel));
     if (pixels[i] == NULL) {
-      fprintf(stderr, "Erreur : allocation mémoire impossible pour la ligne de pixels %d.\n", i);
+      printf("Erreur : allocation mémoire impossible pour la ligne de pixels %d.\n", i);
       // allocation échouée, -> libérer les lignes déjà allouées
-      int j;
-      for (j = 0; j < i; j++) {
+      for (int j = 0; j < i; j++) {
         free(pixels[j]);
       }
       free(pixels); // Libération tableau pointeurs
@@ -40,12 +39,11 @@ t_pixel ** bmp24_allocateDataPixels (int width, int height) {
 
 void bmp24_freeDataPixels (t_pixel ** pixels, int height) {
   if (pixels == NULL) {
-    return; // On ne retourne rien
+    return;
   }
 
   // Libération ligne
-  int i;
-  for (i = 0; i < height; i++) {
+  for (int i = 0; i < height; i++) {
     if (pixels[i] != NULL) {
       free(pixels[i]);
       pixels[i] = NULL;
@@ -63,7 +61,7 @@ t_bmp24 * bmp24_allocate (int width, int height, int colorDepth) {
   // Allocation de la structure t_bmp24
   img = (t_bmp24 *)malloc(sizeof(t_bmp24));
   if (img == NULL) {
-    fprintf(stderr, "Erreur : allocation mémoire impossible pour la structure t_bmp24.\n");
+    printf("Erreur : allocation mémoire impossible pour la structure t_bmp24.\n");
     return NULL;
   }
 
@@ -77,7 +75,7 @@ t_bmp24 * bmp24_allocate (int width, int height, int colorDepth) {
   img->data = bmp24_allocateDataPixels(width, height);
   if (img->data == NULL) {
     free(img);
-    fprintf(stderr, "Erreur : allocation impossible des données de pixels pour t_bmp24.\n");
+    printf("Erreur : allocation impossible des données de pixels pour t_bmp24.\n");
     return NULL;
   }
   return img;
